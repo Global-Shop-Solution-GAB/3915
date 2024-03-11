@@ -1,0 +1,359 @@
+Program.Sub.ScreenSU.Start
+gui.F_Main..create
+gui.F_Main..caption("Kanban - Part Insert")
+gui.F_Main..size(5850,2265)
+gui.F_Main..minx(0)
+gui.F_Main..miny(0)
+gui.F_Main..position(0,0)
+gui.F_Main..event(unload,f_main_unload)
+gui.F_Main..alwaysontop(False)
+gui.F_Main..fontname("Arial")
+gui.F_Main..fontsize(11)
+gui.F_Main..forecolor(0)
+gui.F_Main..fontstyle(False,False,False,False,)
+gui.F_Main..BackColor(-2147483633)
+gui.F_Main..controlbox(True)
+gui.F_Main..maxbutton(False)
+gui.F_Main..minbutton(False)
+gui.F_Main..mousepointer(0)
+gui.F_Main..moveable(True)
+gui.F_Main..sizeable(True)
+gui.F_Main..ShowInTaskBar(True)
+gui.F_Main..titlebar(True)
+gui.F_Main.txtPart.create(textbox,"",True,2955,390,0,1030,500,True,0,Arial,11,-2147483643,1)
+gui.F_Main.txtPart.maxLength(22)
+gui.F_Main.txtPart.event(lostfocus,txtpart_lostfocus)
+gui.F_Main.txtPart.defaultvalue("")
+gui.F_Main.txtPart.controlgroup(0)
+gui.F_Main.lblPart.create(label,"Type Part Number or Scan",True,2700,255,1,1115,200,True,0,Arial,11,-2147483633,0)
+gui.F_Main.lblPart.defaultvalue("")
+gui.F_Main.lblPart.controlgroup(0)
+gui.F_Main.cmdProcess.create(button)
+gui.F_Main.cmdProcess.caption("Process")
+gui.F_Main.cmdProcess.visible(True)
+gui.F_Main.cmdProcess.size(1590,375)
+gui.F_Main.cmdProcess.zorder(0)
+gui.F_Main.cmdProcess.position(2175,1100)
+gui.F_Main.cmdProcess.enabled(True)
+gui.F_Main.cmdProcess.fontname("Arial")
+gui.F_Main.cmdProcess.fontsize(11)
+gui.F_Main.cmdProcess.event(click,cmdprocess_click)
+gui.F_Main.cmdProcess.defaultvalue("")
+gui.F_Main.cmdProcess.controlgroup(0)
+gui.F_Main.cmdBrwPart.create(button)
+gui.F_Main.cmdBrwPart.caption("^")
+gui.F_Main.cmdBrwPart.visible(True)
+gui.F_Main.cmdBrwPart.size(450,360)
+gui.F_Main.cmdBrwPart.zorder(0)
+gui.F_Main.cmdBrwPart.position(4530,500)
+gui.F_Main.cmdBrwPart.enabled(True)
+gui.F_Main.cmdBrwPart.fontname("Arial")
+gui.F_Main.cmdBrwPart.fontsize(11)
+gui.F_Main.cmdBrwPart.event(click,cmdbrwpart_click)
+gui.F_Main.cmdBrwPart.defaultvalue("")
+gui.F_Main.cmdBrwPart.controlgroup(0)
+gui.F_Main.txtLoc.create(textbox,"",True,450,390,0,4055,500,True,0,Arial,11,-2147483643,1)
+gui.F_Main.txtLoc.defaultvalue("")
+gui.F_Main.txtLoc.controlgroup(0)
+gui.F_Main.txtCards.create(textbox,"",True,840,390,0,50,500,True,0,Arial,11,-2147483643,1)
+gui.F_Main.txtCards.numericonly(1)
+gui.F_Main.txtCards.maxLength(22)
+gui.F_Main.txtCards.event(lostfocus,txtpart_lostfocus)
+gui.F_Main.txtCards.defaultvalue("")
+gui.F_Main.txtCards.controlgroup(0)
+gui.F_Main.lblNum.create(label,"#Cards",True,750,255,1,95,200,True,0,Arial,11,-2147483633,0)
+gui.F_Main.lblNum.defaultvalue("")
+gui.F_Main.lblNum.controlgroup(0)
+gui.F_Main.txtPart.tabstop(True)
+gui.F_Main.txtPart.tabindex(1)
+gui.F_Main.cmdBrwPart.tabstop(True)
+gui.F_Main.cmdBrwPart.tabindex(2)
+gui.F_Main.cmdProcess.tabstop(True)
+gui.F_Main.cmdProcess.tabindex(3)
+gui.F_Main.txtCards.tabstop(True)
+gui.F_Main.txtCards.tabindex(4)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Variable.Global.sPart.Declare(String)
+Variable.Global.sLoc.Declare(String)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+
+F.Intrinsic.Control.If(V.Caller.Hook,=,15710)
+	V.Passed.000016.Set("Kanban")
+F.Intrinsic.Control.ElseIf(V.Caller.Hook,=,15760)
+	Gui.F_Main.txtCards.Text("1")
+	V.Local.sSql.Set("Select Terminal From GAB_3915_AUTO_WO_GUI;")
+	F.Intrinsic.String.Concat(V.Local.sSql," Where Terminal='",V.Caller.Terminal,"'",V.Local.sSql)
+	F.ODBC.Connection!conx.OpenRecordsetRO("rstLoadTrm",V.Local.sSql)
+	F.Intrinsic.Control.If(V.ODBC.conx!rstLoadTrm.EOF,=,False)
+		Gui.F_Main..Show
+	F.Intrinsic.Control.EndIf
+	F.ODBC.conx!rstLoadTrm.Close
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_PO_GUI.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+program.sub.f_main_unload.start
+F.Intrinsic.Control.SetErrorHandler("f_main_unload_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+F.ODBC.Connection!Conx.Close
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("f_main_unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_PO_GUI.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.f_main_unload.End
+
+program.sub.cmdprocess_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdprocess_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.fQty.Declare(Float)
+V.Local.sDesc.Declare(String)
+V.Local.sCustPO.Declare(String)
+V.Local.dDate_Due.Declare(Date)
+V.Local.sDateDue.Declare(String)
+V.Local.dDate_Created.Declare(Date)
+V.Local.sPUREQ.Declare(String)
+V.Local.bFileExist.Declare(Boolean)
+V.Local.bFileDir.Declare(Boolean)
+V.Local.sFileDir.Declare(String)
+V.Local.sPurchParts.Declare(String)
+V.Local.sLen.Declare(String)
+V.Local.iLen.Declare(Long)
+V.Local.sAlign.Declare(String)
+V.Local.iAlign.Declare(Long)
+v.Local.sUMPur.Declare(string)
+v.Local.sUMInv.Declare(string)
+v.Local.fCost.Declare(Float)
+
+F.Intrinsic.String.Build("{0}\AutoPartKanban",V.Caller.FilesDir,V.Local.sFileDir)
+F.Intrinsic.File.DirExists(V.Local.sFileDir,V.Local.bFileDir)
+F.Intrinsic.Control.If(V.Local.bFileDir,=,False)
+	F.Intrinsic.File.CreateDir(V.Local.sFileDir)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.String.Build("{0}\AutoPartKanban\Import",V.Caller.FilesDir,V.Local.sFileDir)
+F.Intrinsic.File.DirExists(V.Local.sFileDir,V.Local.bFileDir)
+F.Intrinsic.Control.If(V.Local.bFileDir,=,False)
+	F.Intrinsic.File.CreateDir(V.Local.sFileDir)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.String.Build("{0}\PUREQ.txt",V.Local.sFileDir,V.Local.sPUREQ)
+
+F.Intrinsic.String.Build("{0}\AutoPartKanban\History",V.Caller.FilesDir,V.Local.sFileDir)
+F.Intrinsic.File.DirExists(V.Local.sFileDir,V.Local.bFileDir)
+F.Intrinsic.Control.If(V.Local.bFileDir,=,False)
+	F.Intrinsic.File.CreateDir(V.Local.sFileDir)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.String.Replace(V.Screen.F_Main!txtPart.Text,"'","''",V.Global.sPart)
+F.Intrinsic.String.Replace(V.Screen.F_Main!txtLoc.Text,"'","''",V.Global.sLoc)
+
+F.Intrinsic.String.Build("SELECT CODE_SOURCE, TEMP_PURCH FROM INVENTORY_MST2 IM2 LEFT OUTER JOIN INVENTORY_MST3 IM3 ON IM2.PART=IM3.PART AND IM2.LOCATION=IM3.LOCATION WHERE IM2.PART = '{0}' AND IM2.LOCATION = '{1}';",V.Global.sPart,V.Global.sLoc,V.Local.sSql)
+F.ODBC.Connection!conx.ExecuteAndReturn(V.Local.sSql,V.Local.sRet)
+F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+
+F.Intrinsic.Control.If(V.Local.sRet(0).Trim,=,"M","OR",V.Local.sRet(0).Trim,=,"F")
+F.Intrinsic.Control.AndIf(V.Local.sRet(1),!=,"Y")
+	F.Intrinsic.String.Build("Select QTY_ORDER, TIME_MATERIAL_LEAD, CODE_SORT, DESCRIPTION From V_Inventory_Mstr Where Part = '{0}' And Location = '{1}';",V.Global.sPart,V.Global.sLoc,V.Local.sSql)
+	F.ODBC.Connection!conx.OpenRecordsetRO("rstLoadInv",V.Local.sSql)
+	F.Intrinsic.Control.If(V.ODBC.conx!rstLoadInv.EOF,=,False)
+		V.Local.dDate_Created.Set(V.Ambient.Date)
+		V.Local.sDesc.Set(V.ODBC.conx!rstLoadInv.FieldVal!DESCRIPTION)
+		V.Local.fQty.Set(V.ODBC.conx!rstLoadInv.FieldVal!QTY_ORDER)
+		F.Intrinsic.Math.Mult(V.Screen.F_Main!txtCards.Text,V.Local.fQty,V.Local.fQty)
+		V.Local.sCustPO.Set(V.ODBC.conx!rstLoadInv.FieldVal!CODE_SORT)
+		F.Intrinsic.Date.DateAddWorkdays(V.Ambient.Date,V.ODBC.conx!rstLoadInv.FieldVal!TIME_MATERIAL_LEAD,V.Local.dDate_Due)
+		F.Intrinsic.String.Build("Select * From GAB_3915_AUTO_WO Where PART = '{0}' And LOC = '{1}';",V.Global.sPart,V.Global.sLoc,V.Local.sSql)
+		F.ODBC.Connection!conx.OpenRecordsetRW("rstUpd",V.Local.sSql)
+' 05/24/2019 Allowing to add the Part in the List more than Once (MikeM)
+'		F.Intrinsic.Control.If(V.ODBC.conx!rstUpd.EOF,=,True)
+			F.ODBC.conx!rstUpd.AddNew
+			F.ODBC.conx!rstUpd.Set!PART(V.Global.sPart)
+			F.ODBC.conx!rstUpd.Set!LOC(V.Global.sLoc)
+			F.ODBC.conx!rstUpd.Set!DESCR(V.Local.sDesc)
+			F.ODBC.conx!rstUpd.Set!QTY(V.Local.fQty)
+			F.ODBC.conx!rstUpd.Set!DATE_DUE(V.Local.dDate_Due)
+			F.ODBC.conx!rstUpd.Set!DATE_CREATED(V.Local.dDate_Created)
+			F.ODBC.conx!rstUpd.Set!CUSTOMER_PO(V.Local.sCustPO)
+			F.ODBC.conx!rstUpd.Update
+			F.ODBC.conx!rstUpd.Close
+			F.Intrinsic.UI.Msgbox("Part Saved","Kanban Part - Message")
+'		F.Intrinsic.Control.Else
+'			F.Intrinsic.UI.Msgbox("Part Already added","Kanban Part - Message")
+'		F.Intrinsic.Control.EndIf
+		Gui.F_Main.txtPart.Text("")
+		Gui.F_Main.txtLoc.Text("")
+		Gui.F_Main.txtCards.Text("1")
+	F.Intrinsic.Control.Else
+		F.Intrinsic.UI.Msgbox("Part number not in the Inventory.","Validate Part")
+	F.Intrinsic.Control.EndIf
+	F.ODBC.conx!rstLoadInv.Close
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Build("Select a.TIME_MATERIAL_LEAD, a.QTY_ORDER, a.DESCRIPTION,a.UM_INVENTORY,a.UM_PURCHASING,b.cost From V_Inventory_All a inner join V_inventory_cost b on a.part = b.part and a.location = b.locn Where a.Part = '{0}' And a.Location = '{1}';",V.Global.sPart,V.Global.sLoc,V.Local.sSql)
+	F.ODBC.Connection!conx.OpenRecordsetRO("rstReq",V.Local.sSql)
+		F.Intrinsic.Control.If(V.ODBC.conx!rstReq.EOF,=,False)
+			F.Intrinsic.Date.DateAddWorkdays(V.Ambient.Date,V.ODBC.conx!rstReq.FieldVal!TIME_MATERIAL_LEAD,V.Local.dDate_Due)
+			F.Intrinsic.String.Format(V.Local.dDate_Due,"MMDDYY",V.Local.sDateDue)
+			V.Local.sDesc.Set(V.ODBC.conx!rstReq.FieldVal!DESCRIPTION)
+			V.Local.fQty.Set(V.ODBC.conx!rstReq.FieldVal!QTY_ORDER)
+			F.Intrinsic.Math.Mult(V.Screen.F_Main!txtCards.Text,V.Local.fQty,V.Local.fQty)
+			F.Intrinsic.Control.If(V.Local.fQty,=,0)
+				V.Local.fQty.Set(1)
+			F.Intrinsic.Control.EndIf
+			V.Local.sUMPur.Set(V.ODBC.conx!rstReq.FieldVal!UM_PURCHASING)
+			V.Local.sUMInv.Set(V.ODBC.conx!rstReq.FieldVal!UM_INVENTORY)
+			V.Local.fCost.Set(V.ODBC.conx!rstReq.FieldVal!cost)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.String.Format(V.Ambient.Date,"MMDDYY",V.Local.sDateDue)
+			V.Local.sDesc.Set(V.Global.sPart)
+			V.Local.fQty.Set(1)
+		F.Intrinsic.Control.EndIf
+	F.ODBC.conx!rstReq.Close
+
+	V.Local.sLen.Set("6*!*3*!*20*!*18*!*2*!*6*!*1*!*3*!*1*!*6*!*6*!*1*!*15*!*2*!*6*!*6*!*30*!*20*!*19*!*19*!*3*!*3*!*3*!*2*!*12*!*12*!*2")
+	V.Local.sAlign.Set("0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0*!*0")
+	F.Intrinsic.String.Build("*!**!*{0}*!**!*{1}*!**!**!**!**!**!**!**!**!*{7}*!**!*{2}*!*{3}*!**!*{4}*!*{5}*!**!**!**!**!**!**!*{6}",V.Global.sPart,V.Global.sLoc,V.Local.sDateDue,V.Local.sDesc,V.Local.fQty,v.Local.fCost,v.Local.sUMInv,v.Local.sUMPur,V.Local.sPurchParts)
+	F.Intrinsic.String.Split(V.Local.sLen,"*!*",V.Local.iLen)
+	F.Intrinsic.String.Split(V.Local.sAlign,"*!*",V.Local.iAlign)
+	F.Intrinsic.String.Split(V.Local.sPurchParts,"*!*",V.Local.sPurchParts)
+	F.Intrinsic.String.PositionalString(V.Local.sPurchParts,V.Local.iLen,V.Local.iAlign,V.Local.sPurchParts)
+
+	F.Intrinsic.File.Exists(V.Local.sPUREQ,V.Local.bFileExist)
+	F.Intrinsic.Control.If(V.Local.bFileExist,=,True)
+		F.Intrinsic.File.Append2FileNewLine(V.Local.sPUREQ,V.Local.sPurchParts)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.File.String2File(V.Local.sPUREQ,V.Local.sPurchParts)
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.UI.Msgbox("Part Saved","Kanban Part - Message")
+
+	Gui.F_Main.txtPart.Text("")
+	Gui.F_Main.txtLoc.Text("")
+	Gui.F_Main.txtCards.Text("1")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdprocess_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_PO_GUI.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdprocess_click.End
+
+program.sub.cmdbrwpart_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdbrwpart_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sRet.Declare(String)
+F.Intrinsic.UI.Browser(105,"",V.Local.sRet)
+
+F.Intrinsic.Control.If(V.Local.sRet,"=","***CANCEL***")
+	F.Intrinsic.UI.Msgbox("No Project ID was selected")
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+	Gui.F_Main.txtPart.Text(V.Local.sRet(0))
+	Gui.F_Main.txtLoc.Text(V.Local.sRet(1))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdbrwpart_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_PO_GUI.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.cmdbrwpart_click.End
+
+program.sub.txtpart_lostfocus.start
+F.Intrinsic.Control.SetErrorHandler("txtpart_lostfocus_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.iLen.Declare(Long)
+V.Local.sTemp.Declare(String)
+V.Local.sPart.Declare(String)
+
+V.Local.sPart.Set(V.Screen.F_Main!txtPart.Text)
+F.Intrinsic.String.Len(V.Local.sPart,V.Local.iLen)
+F.Intrinsic.Control.If(V.Local.iLen,>,20)
+	F.Intrinsic.String.Left(V.Local.sPart,20,V.Local.sTemp)
+	Gui.F_Main.txtPart.Text(V.Local.sTemp)
+	F.Intrinsic.String.Mid(V.Local.sPart,21,2,V.Local.sTemp)
+	Gui.F_Main.txtLoc.Text(V.Local.sTemp)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("txtpart_lostfocus_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_PO_GUI.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+program.sub.txtpart_lostfocus.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB_Part_Auto_WO_GUI$}$RRC$}$11/19/2019 3:03:32 PM$}$False
+${$1$}$$}$$}$1$}$15710$}$OLS001-POPULATE-HOOK (On-line GUI)$}$2/27/2015 8:21:40 AM$}$(Program: OLG002; Screen: OLS001)
+
+${$1$}$$}$$}$0$}$15760$}$OLS001-PB-SCRIPT-1-HOOK (On-line GUI)$}$2/26/2015 11:51:24 AM$}$(Program: OLG002; Screen: OLS001)
+
+Program.Sub.Comments.End
+
