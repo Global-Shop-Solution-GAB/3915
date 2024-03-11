@@ -1,0 +1,167 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+V.Local.sSql2.Declare(String)
+V.Local.sPart.Declare(String)
+V.Local.sLocn.Declare(String)
+V.Local.sDesc.Declare(String)
+V.Local.fQty.Declare(Float)
+V.Local.sQty.Declare(String)
+V.Local.dDateDue.Declare(Date)
+V.Local.sDateDue.Declare(String)
+V.Local.dDateCreated.Declare(Date)
+V.Local.sCustPO.Declare(String)
+V.Local.sFileName.Declare(String)
+V.Local.sCsvLine.Declare(String)
+V.Local.bExists.Declare(Boolean)
+
+F.Intrinsic.String.Concat(V.Caller.FilesDir,"\","UPLIV950.TXT",V.Local.sFileName)
+
+F.odbc.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+V.Local.sSql.Set("SELECT * FROM GAB_3915_AUTO_WO")
+F.ODBC.Connection!conx.OpenRecordsetRW("rstGetRecords",V.Local.sSql)
+F.Intrinsic.Control.DoUntil(V.ODBC.conx!rstGetRecords.EOF,=,"True")
+	V.Local.sPart.Set(V.ODBC.conx!rstGetRecords.FieldValTrim!PART)
+	V.Local.sLocn.Set(V.ODBC.conx!rstGetRecords.FieldValTrim!LOC)
+	V.Local.sDesc.Set(V.ODBC.conx!rstGetRecords.FieldValTrim!DESCR)
+	V.Local.fQty.Set(V.ODBC.conx!rstGetRecords.FieldVal!QTY)
+	F.Intrinsic.String.Format(V.Local.fQty,"##########.0000",V.Local.sQty)
+	V.Local.dDateDue.Set(V.ODBC.conx!rstGetRecords.FieldVal!DATE_DUE)
+	F.Intrinsic.String.Format(V.Local.dDateDue,"YYYYMMDD",V.Local.sDateDue)
+	V.Local.dDateCreated.Set(V.ODBC.conx!rstGetRecords.FieldVal!DATE_CREATED)
+	V.Local.sCustPO.Set(V.ODBC.conx!rstGetRecords.FieldValTrim!CUSTOMER_PO)
+
+	F.Intrinsic.String.Concat(V.Local.sPart,",",V.Local.sLocn,",",V.Local.sDesc,",",V.Local.sQty,",",V.Local.sDateDue,",",V.Local.sCustPO,V.Local.sCsvLine)
+'Add record to the file or create file and add record
+	F.Intrinsic.File.Exists(V.Local.sFileName,V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists,=,"True")
+		F.Intrinsic.File.Append2FileNewLine(V.Local.sFileName,V.Local.sCsvLine)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.File.String2File(V.Local.sFileName,V.Local.sCsvLine)
+	F.Intrinsic.Control.EndIf
+
+'Save records to History
+	V.Local.sSql2.Set("SELECT * FROM GAB_3915_AUTO_WO_H")
+	F.ODBC.Connection!conx.OpenRecordsetRW("rstSaveHist",V.Local.sSql2)
+	F.ODBC.conx!rstSaveHist.AddNew
+	F.ODBC.conx!rstSaveHist.Set!PART(V.Local.sPart)
+	F.ODBC.conx!rstSaveHist.Set!LOC(V.Local.sLocn)
+	F.ODBC.conx!rstSaveHist.Set!DESCR(V.Local.sDesc)
+	F.ODBC.conx!rstSaveHist.Set!QTY(V.Local.fQty)
+	F.ODBC.conx!rstSaveHist.Set!DATE_DUE(V.Local.dDateDue)
+	F.ODBC.conx!rstSaveHist.Set!DATE_CREATED(V.Local.dDateCreated)
+	F.ODBC.conx!rstSaveHist.Set!CUSTOMER_PO(V.Local.sCustPO)
+	F.ODBC.conx!rstSaveHist.Update
+	F.ODBC.conx!rstSaveHist.Close
+
+'Delete those records that were saved to history
+	F.ODBC.conx!rstGetRecords.Delete
+	F.ODBC.conx!rstGetRecords.Update
+	F.ODBC.conx!rstGetRecords.MoveNext
+F.Intrinsic.Control.Loop
+F.ODBC.conx!rstGetRecords.Close
+F.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.CallSub(Subdelren)
+F.Intrinsic.UI.Msgbox("Exported Successfully","Message")
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_GSS.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.SubDelRen.Start
+F.Intrinsic.Control.SetErrorHandler("SubDelRen_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.bExists.Declare(Boolean)
+V.Local.sFile.Declare(String)
+V.Local.sFileFull.Declare(String)
+V.Local.sFileFull2.Declare(String)
+V.Local.sFilePath.Declare(String)
+V.Local.sFileSection1.Declare(String)
+V.Local.iDelMonth.Declare(Long)
+V.Local.iDelMonth2.Declare(Long)
+V.Local.sDelMonth.Declare(String)
+V.Local.dDateDel.Declare(Date)
+V.Local.iC.Declare(Long)
+V.Local.sFileMove.Declare(String)
+V.Local.sDate.Declare(String)
+V.Local.iC2.Declare(Long,0)
+V.Local.iVarAsc.Declare(Long)
+V.Local.sVarChr.Declare(String,"A")
+V.Local.iStatus.Declare(Long)
+
+'Delete 2 month old Files
+F.Intrinsic.String.Format(V.Ambient.Date,"YYYYMMDD",V.Local.sDate)
+F.Intrinsic.Date.DateAdd("M",-2,V.Ambient.Date,V.Local.dDateDel)
+F.Intrinsic.Date.Month(V.Local.dDateDel,V.Local.iDelMonth)
+F.Intrinsic.String.Concat(V.Caller.FilesDir,"\AutoWO\","",V.Local.sFilePath)
+F.Intrinsic.File.GetFileList(V.Local.sFilePath,,V.Local.sFile)
+F.Intrinsic.String.Split(V.Local.sFile,":",V.Local.sFile)
+F.Intrinsic.Control.For(V.Local.iC,0,V.Local.sFile.UBound,1)
+	F.Intrinsic.String.Mid(V.Local.sFile(V.Local.iC),13,2,V.Local.iDelMonth2)
+	F.Intrinsic.String.Concat(V.Local.sFilePath,V.Local.sFile(V.Local.iC),V.Local.sFileFull)
+	F.Intrinsic.Control.If(V.Local.iDelMonth2,=,V.Local.iDelMonth)
+		F.Intrinsic.File.DeleteFile(V.Local.sFileFull)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Next(V.Local.iC)
+
+'Rename File to the next available
+F.Intrinsic.String.Concat(V.Local.sFilePath,"UPLIV950",V.Local.sDate,".TXT",V.Local.sFileFull)
+F.Intrinsic.File.Exists(V.Local.sFileFull,V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists,=,True)
+	F.Intrinsic.Control.Do
+		F.Intrinsic.String.Concat(V.Local.sFilePath,"UPLIV950",V.Local.sDate,V.Local.sVarChr,".TXT",V.Local.sFileFull2)
+		F.Intrinsic.File.Exists(V.Local.sFileFull2,V.Local.bExists)
+		F.Intrinsic.Control.If(V.Local.bExists,=,True)
+			F.Intrinsic.String.Asc(V.Local.sVarChr,V.Local.iVarAsc)
+			F.Intrinsic.Math.Add(V.Local.iVarAsc,1,V.Local.iVarAsc)
+			V.Local.sVarChr.Set(V.ASCII.[V.Local.iVarAsc])
+		F.Intrinsic.Control.Else
+			F.Intrinsic.File.MoveFile(V.Local.sFileFull,V.Local.sFileFull2,V.Local.iStatus)
+			F.Intrinsic.Control.If(V.Local.iStatus,=,0)
+				F.Intrinsic.UI.Msgbox(V.Local.sFileFull,"File couldn't be renamed")
+			F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.ExitDo
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.Loop
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("SubDelRen_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_WO_GSS.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.SubDelRen.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB_PART_AUTO_WO_GSS$}$RRC$}$02/26/2015
+Program.Sub.Comments.End
+
