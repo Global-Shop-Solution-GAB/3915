@@ -1,0 +1,110 @@
+Program.Sub.ScreenSU.Start
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+V.Local.sSql2.Declare(String)
+V.Local.sPart.Declare(String)
+V.Local.sLocn.Declare(String)
+V.Local.sDesc.Declare(String)
+V.Local.fQty.Declare(Float)
+V.Local.sQty.Declare(String)
+V.Local.dDateDue.Declare(Date)
+V.Local.sDateDue.Declare(String)
+V.Local.dDateCreated.Declare(Date)
+V.Local.sCustPO.Declare(String)
+V.Local.sFileName.Declare(String)
+V.Local.sCsvLine.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sPUREQkan.Declare(String)
+V.Local.sPUREQcur.Declare(String)
+V.Local.sPUREQinpr.Declare(String)
+V.Local.sPUREQhist.Declare(String)
+V.Local.iRet.Declare(Long)
+V.Local.sMsg.Declare(String)
+V.Local.sFileDate.Declare(String)
+V.Local.sFileTime.Declare(String)
+V.Local.sSwitchUPL.Declare(String)
+
+F.Intrinsic.String.Build("{0}1UPLPUREQ",V.Caller.CompanyCode,V.Local.sSwitchUPL)
+
+F.Intrinsic.String.Format(V.Ambient.Date,"MMDDYY",V.Local.sFileDate)
+F.Intrinsic.String.Format(V.Ambient.Time,"HNS",V.Local.sFileTime)
+
+F.Intrinsic.String.Build("{0}\AutoPartKanban\Import\PUREQ.txt",V.Caller.FilesDir,V.Local.sPUREQkan)
+F.Intrinsic.String.Build("{0}\PUREQ.txt",V.Caller.FilesDir,V.Local.sPUREQcur)
+F.Intrinsic.String.Build("{0}\PUREQ_InProcess.txt",V.Caller.FilesDir,V.Local.sPUREQinpr)
+F.Intrinsic.String.Build("{0}\AutoPartKanban\History\PUREQ_{1}_{2}.txt",V.Caller.FilesDir,V.Local.sFileDate,V.Local.sFileTime,V.Local.sPUREQhist)
+
+F.Intrinsic.File.Exists(V.Local.sPUREQcur,V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists,=,True)
+	F.Intrinsic.File.MoveFile(V.Local.sPUREQcur,V.Local.sPUREQinpr,V.Local.iRet)
+	F.Intrinsic.Control.If(V.Local.iRet,=,0)
+		F.Intrinsic.String.Build("{0} is locked. Unlock file and try process again.",V.Local.sPUREQcur,V.Local.sMsg)
+		F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File Check")
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.File.Exists(V.Local.sPUREQkan,V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists,=,True)
+	F.Intrinsic.File.MoveFile(V.Local.sPUREQkan,V.Local.sPUREQcur,V.Local.iRet)
+	F.Intrinsic.Control.If(V.Local.iRet,=,0)
+		F.Intrinsic.String.Build("{0} is locked. Unlock file and try process again.",V.Local.sPUREQkan,V.Local.sMsg)
+		F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File Check")
+		F.Intrinsic.Control.End
+
+	F.Intrinsic.Control.Else
+		'F.Intrinsic.Task.LaunchGSSSync("UPL001A","-C","PLA1UPLPUREQ")
+		F.Intrinsic.Task.LaunchGSSSync("UPL001A","-C",V.Local.sSwitchUPL)
+		F.Intrinsic.File.MoveFile(V.Local.sPUREQcur,V.Local.sPUREQhist,V.Local.iRet)
+		F.Intrinsic.Control.If(V.Local.iRet,=,0)
+			F.Intrinsic.String.Build("{0} is locked. Unlock file and try process again.",V.Local.sPUREQhist,V.Local.sMsg)
+			F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File Check")
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Else
+	F.Intrinsic.UI.Msgbox("No file to process.","File Check")
+	F.Intrinsic.Control.End
+
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.File.Exists(V.Local.sPUREQinpr,V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists,=,True)
+	F.Intrinsic.File.MoveFile(V.Local.sPUREQinpr,V.Local.sPUREQcur,V.Local.iRet)
+	F.Intrinsic.Control.If(V.Local.iRet,=,0)
+		F.Intrinsic.String.Build("{0} is locked.",V.Local.sPUREQinpr,V.Local.sMsg)
+		F.Intrinsic.UI.Msgbox(V.Local.sMsg,"File Check")
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.UI.Msgbox("Exported Successfully","Message")
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_3915_AUTO_PO_GSS.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB_PART_AUTO_WO_GSS$}$RRC$}$2/26/2015$}$False
+Program.Sub.Comments.End
+
